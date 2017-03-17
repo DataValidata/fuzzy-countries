@@ -1,0 +1,23 @@
+{
+    "name": "datavalidata/fuzzy-countries",
+    "description": "Fuzzy Country matching",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ciaran Kelly",
+            "email": "ciaran@datavalidata.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "DataValidata\\FuzzyCountries\\" : "src"
+        }
+    },
+    "require": {
+        "datavalidata/fuzzy-strings": "^0",
+        "league/iso3166": "^1.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^3.2"
+    }
+}
