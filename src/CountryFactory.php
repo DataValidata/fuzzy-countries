@@ -37,4 +37,17 @@ class CountryFactory
             self::$countryData->getByAlpha3($alpha3)
         );
     }
+
+    public static function buildFromAlpha3AndRegularExpression($alpha3, $regexp)
+    {
+        if(!self::$countryData) {
+            self::$countryData = (new ISO3166);
+        }
+
+        $country = FuzzyCountry::buildFromDataArray(
+            self::$countryData->getByAlpha3($alpha3)
+        );
+        $country->setRegularExpression($regexp);
+        return $country;
+    }
 }

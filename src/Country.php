@@ -33,6 +33,10 @@ class Country
         return sprintf("Country [%s, %s] %s", $this->iso3166Alpha2, $this->iso3166Alpha3, $this->name);
     }
 
+    /**
+     * @param $data
+     * @return static
+     */
     public static function buildFromDataArray($data)
     {
         return new static(

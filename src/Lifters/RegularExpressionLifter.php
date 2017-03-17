@@ -4,6 +4,7 @@ namespace DataValidata\FuzzyCountries\Lifters;
 
 use DataValidata\FuzzyCountries\CountryFactory;
 use DataValidata\FuzzyCountries\CountryLifter;
+use DataValidata\FuzzyCountries\FuzzyCountry;
 use DataValidata\FuzzyStrings\WordCombinations;
 use DataValidata\FuzzyStrings\WordSequences;
 
@@ -270,24 +271,76 @@ class RegularExpressionLifter implements CountryLifter
     private $wordSequences;
     private $wordCombinations;
 
+    private $aggressionEnabled;
+
+    public function __construct($aggressionEnabled = false)
+    {
+        // wrap all the regular expressions, because i'm a bit lazy right now.
+        foreach($this->regexps as $alpha3 => $regexp) {
+            $this->regexps[$alpha3] = '/' . $regexp . '/i';
+        }
+
+        $this->aggressionEnabled = $aggressionEnabled;
+    }
+
+
     public function setText($text)
     {
         $this->wordSequences = (new WordSequences($text, false));
-        $this->wordCombinations = (new WordCombinations($text));
+        if($this->aggressionEnabled) {
+            $this->wordCombinations = (new WordCombinations($text));
+        } else {
+            $this->wordCombinations = [];
+        }
     }
 
     public function getIterator()
     {
+        /** @var FuzzyCountry[] $found */
         $found = [];
+        $unmatchedRegularExpressions = [];
+        foreach($this->regexps as $alpha3 => $regexp) {
+            $unmatchedRegularExpressions[$alpha3] = $regexp;
+        }
+
         foreach($this->wordSequences as $wordSequence) {
             $imploded = implode(" ", $wordSequence);
-
-            foreach($this->regexps as $alpha3 => $regexp) {
-                $isMatch = preg_match('/'.$regexp.'/i', $imploded);
+            foreach($unmatchedRegularExpressions as $alpha3 => $regexp) {
+                $isMatch = preg_match($regexp, $imploded, $matchData);
                 if($isMatch) {
+                    $uniqueMatches = array_unique(array_values($matchData));
                     if(!in_array($alpha3, array_keys($found))) {
-                        $found[$alpha3] = CountryFactory::buildFromAlpha3($alpha3);
+                        $found[$alpha3] = CountryFactory::buildFromAlpha3AndRegularExpression($alpha3, $regexp);
                         yield $found[$alpha3];
+                    }
+
+                    foreach($uniqueMatches as $uniqueMatch) {
+                        $found[$alpha3]->addMatchPart($uniqueMatch);
+                    }
+
+                    unset($unmatchedRegularExpressions[$alpha3]);
+                }
+            }
+        }
+
+        // if we still have no matching countries, lets get a bit more aggressive...
+        if(count($found) === 0) {
+            foreach($this->wordCombinations as $wordSequence) {
+                $imploded = implode(" ", $wordSequence);
+                foreach($unmatchedRegularExpressions as $alpha3 => $regexp) {
+                    $isMatch = preg_match($regexp, $imploded, $matchData);
+                    if($isMatch) {
+                        $uniqueMatches = array_unique(array_values($matchData));
+                        if(!in_array($alpha3, array_keys($found))) {
+                            $found[$alpha3] = CountryFactory::buildFromAlpha3AndRegularExpression($alpha3, $regexp);
+                            yield $found[$alpha3];
+                        }
+
+                        foreach($uniqueMatches as $uniqueMatch) {
+                            $found[$alpha3]->addMatchPart($uniqueMatch);
+                        }
+
+                        unset($unmatchedRegularExpressions[$alpha3]);
                     }
                 }
             }
