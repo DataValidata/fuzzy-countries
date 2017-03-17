@@ -9,15 +9,21 @@ class CountrySeparator implements \IteratorAggregate
 {
 
     private $text;
+    private $lifter;
 
     /** @var Country[] */
     private $matches;
 
-    public function __construct($text, Lifter $lifter)
+    public function __construct(Lifter $lifter)
     {
-        $lifter->setText($text);
-        $this->matches = iterator_to_array($lifter);
+        $this->lifter = $lifter;
+    }
+
+    public function setText($text)
+    {
         $this->text = $text;
+        $this->lifter->setText($text);
+        $this->matches = iterator_to_array($this->lifter);
     }
 
     public function getIterator()

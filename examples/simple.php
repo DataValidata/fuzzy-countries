@@ -27,7 +27,8 @@ echo "Fully stripped: " . $fullyStrippedText."\n";
 
 
 
-$countSep = new \DataValidata\FuzzyCountries\CountrySeparator($text, $lifter);
+$countSep = new \DataValidata\FuzzyCountries\CountrySeparator($lifter);
+$countSep->setText($text);
 foreach ($countSep as $isoCode => $cleanAddress) {
     echo "address=$cleanAddress&country=$isoCode\n";
 }
